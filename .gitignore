@@ -1,0 +1,78 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches e logs
+*.log
+*.sqlite3
+
+# Arquivos do ambiente virtual
+venv/
+.env/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Configurações do IDE/Editor
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Arquivos de instalação
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info/
+
+# Arquivos de pacotes
+*.whl
+*.wheel
+
+# Arquivos de testes e cobertura de código
+.tox/
+.nox/
+.coverage
+*.cover
+*.py,cover
+.hypothesis/
+
+# Arquivos de ferramentas de linting/mypy
+.mypy_cache/
+.pyre/
+.pytype/
+.pylint.d/
+
+# Configurações locais e arquivos temporários
+*.env
+*.local
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Arquivos de deploy (se aplicável)
+*.log
+*.pot
+*.mo
+*.po
+
+# Arquivos de notebook
+.ipynb_checkpoints
+
+# Configurações de Docker e Vagrant (se aplicável)
+.vagrant/
+docker-compose.override.yml
+
+# Arquivos de lock do Pipenv
+Pipfile.lock
+
+# Arquivos de lock do Poetry
+poetry.lock
+
+# Configurações de editor, como PyCharm
+.idea/
+.vscode/
