@@ -1,39 +1,67 @@
 import io
+import base64
 import re
 import requests
 from pdfminer.high_level import extract_pages
 
 
-def process_pdf_from_url(pdf_url):
-    # Faz o download do PDF
-    response = requests.get(pdf_url)
-    response.raise_for_status()  # Verifica se o download foi bem-sucedido
+def base64_to_bytes(base64_str):
+    byte_data = base64.b64decode(base64_str)
+    return byte_data
 
-    # Converte o conteúdo baixado em um arquivo em memória
-    pdf_memory_file = io.BytesIO(response.content)
+def process_pdf_from_url(pdf_url_or_byte: str | bytes):
+    if isinstance(pdf_url_or_byte, str):
+        response = requests.get(pdf_url_or_byte)
+        pdf = io.BytesIO(response.content)
+    elif isinstance(pdf_url_or_byte, bytes):
+        pdf_bytes = base64_to_bytes(pdf_url_or_byte)
+        pdf = io.BytesIO(pdf_bytes)
+    else:
+        raise ValueError("O parâmetro pdf_url deve ser uma string ou bytes.")
 
     barcode = None
+    match_regex = None
 
-    # Processa o PDF da mesma forma que no seu código original
-    for page_layout in extract_pages(pdf_memory_file):
+    regex_attempt_list = [
+        r'(\d{11}-\d{1} \d{11}-\d{1} \d{11}-\d{1} \d{11}-\d{1})',
+        r'(\d{12} \d{12} \d{12} \d{12})',
+        r'(\d{5}\.\d{5} \d{5}\.\d{6} \d{5}\.\d{6} \d{1} \d{14})',
+        r'(\d{44})',
+        r'(\d{5}-\d{5} \d{5}-\d{6} \d{5}-\d{6} \d{1} \d{14})',
+        r'(\d{47})',
+        r'(\d{12}-\d{12}-\d{12}-\d{12})',
+        r'(\d{12}\.\d{12}\.\d{12}\.\d{1}\s\d{14})',
+        r'(\d{10} \d{10} \d{10} \d{14})',
+        r'(\d{10}-\d{10}-\d{10}-\d{14})',
+        r'(\d{13}\s\d{13}\s\d{13}\s\d{13})',
+        r'(\d{5} \d{6} \d{5} \d{6} \d{5} \d{6} \d{5} \d{6})',
+        r'(\d{50})',
+        r'([A-Z0-9]{15,50})',
+        r'(\d{5}[-\.]\d{5} \d{5}[-\.]\d{6} \d{5}[-\.]\d{6} \d{1} \d{14})',
+        r'(\d{5} \d{5} \d{5} \d{5} \d{5} \d{5})',
+        r'(\d{5}-\d{5}-\d{5}-\d{5}-\d{5})'
+    ]
+
+    pdf_lines = []
+    for page_layout in extract_pages(pdf):
         for element in page_layout:
             try:
                 element_text = element.get_text().strip()
-                barcode_match = re.search(r'(\d{11}-\d{1} \d{11}-\d{1} \d{11}-\d{1} \d{11}-\d{1})', element_text)
-                print('*', element_text, '*')
-                if barcode_match:
-                    print(element_text)
-                    barcode = re.sub(r'\D', '', barcode_match.group(1))  # Remove todos os caracteres que não são números
-                    print("resultadooo")
-                    print(barcode)
+                pdf_lines.append(element_text)
+                for regex in regex_attempt_list:
+                    barcode_match = re.search(regex, element_text)
 
-            except Exception as e:
-                print(f"Erro ao processar elemento: {e}")
+                    if barcode_match:
+                        barcode = re.sub(r'\D', '', barcode_match.group(1))
+                        match_regex = regex
+                        break
+            except:
                 continue
 
-    return barcode
+    print(pdf_lines)
 
-# Exemplo de uso
-pdf_url = "https://d3mc5mwbv01en1.cloudfront.net/2d8d5264-b220-468f-84f0-997686f5b3f5.pdf"
-barcode = process_pdf_from_url(pdf_url)
-print(f"Código de barras encontrado: {barcode}")
+    return barcode, match_regex
+
+pdf_url_or_byte = 'https://d3mc5mwbv01en1.cloudfront.net/74df892e-f22c-4334-a050-3cfdfcfdc2de.pdf'
+barcode_regex = process_pdf_from_url(pdf_url_or_byte)
+print(f"\nCódigo de barras encontrado: \n{barcode_regex}")
